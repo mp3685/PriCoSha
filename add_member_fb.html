@@ -1,0 +1,22 @@
+<html>
+<head>
+    <h1>Add Member to Group</h1>
+</head>
+<body>
+<form action="/add_member_fb_AUTH" method="POST">
+    <input type="text" name = "group_name" placeholder="group name" required/></br>
+    <input type="text" name = "first_name" placeholder="first name" required/> </br>
+    <input type="text" name = "last_name" placeholder="last name" required/></br>
+    <input type="submit" value = Add />
+    {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+    {% endif %}
+</form>
+                
+<a href="/home">Go back to home</a>
+                
+</body>
+                
+                
+</html>
+                

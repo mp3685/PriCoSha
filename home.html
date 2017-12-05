@@ -1,0 +1,42 @@
+<html>
+<head>
+</head>
+<body>
+<form action="/home">
+	<h1>Welcome {{username}}</h1>
+	<a href="/create_fb">Create Friend Group</a>
+	<a href="/manage_fb">Manage Owned Friend Groups</a>
+</form>
+<form action="/post" method="POST">
+	<a href="/create_new_content">Create New Post</a>
+	<!--<input type="submit" value = Create New Content />-->
+</form>
+
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+<table>
+	<th>ID</th>
+	<th>Time</th>
+	<th>Post</th>
+	<th>Username</th>
+
+{% for line in posts %}
+	<tr>
+		<td>{{line.id}}</td>
+		<td>{{line.timest}}</td>
+		<td><a href={{line.file_path}} target="_blank">{{line.content_name}}</a></td>
+		<td>{{line.username}}</td>
+	</tr>
+{% endfor %}
+</table>
+
+<a href="/logout">Logout</a>
+
+</body>
+
+
+</html>

@@ -1,0 +1,22 @@
+<html>
+<head>
+</head>
+<body>
+<form action="/create_new_content_AUTH" method="POST">
+    <input type="text" name = "file_path" placeholder="link" required/> </br>
+    <input type="text" name = "content_name" placeholder="name" required/></br>
+    <input type="text" name = "public" placeholder="0 for no / 1 for yes" required/></br>    
+    <input type="submit" value = Post />
+    {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+    {% endif %}
+    {% if public==0 %}
+</form>
+                
+<a href="/home">Go back to home</a>
+                
+</body>
+                
+                
+</html>
+                

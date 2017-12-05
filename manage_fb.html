@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <h1>Your Owned Friend Groups</h1>
+    </head>
+    <body>
+
+    {% if not_true %}
+        <p>You do not own any Friend Groups.</p>        
+    {% endif %}
+
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+            
+        <table>
+            {% for num in test %}
+                <th>Group Name</th>
+                <th>Options</th>
+            {% endfor %}
+
+            {% for line in groups %}
+                <tr>
+                    <td>{{line.group_name}}</td>
+                    <td><a href='/add_member_fb'>Add Member</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+                    
+    <a href="/home">Go back to home</a>
+                    
+    </body>
+                    
+                    
+</html>
+                    
