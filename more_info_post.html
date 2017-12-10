@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <h1>More Info</h1>
+    </head>
+    <body>
+
+    {% if not_true %}
+        <p>There is no more info about this post.</p>        
+    {% endif %}
+
+    {% if no_tags %}
+        <p>There are no tagged users for this post.</p>        
+    {% endif %}
+
+    {% if no_comments %}
+        <p>There are no comments for this post.</p>        
+    {% endif %}
+
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+            
+        <table>
+            {% for num in test1 %}
+                <th>Names Of Tagged Users</th>
+            {% endfor %}
+
+            {% for line in group1 %}
+                <tr>
+                    <td>{{line.first_name}} {{line.last_name}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+            
+        <table>
+            {% for num in test2 %}
+                <th>Comments</th>
+                <th>Posted By</th>
+            {% endfor %}
+
+            {% for line in group2 %}
+            <tr>
+                <td>{{line.comment_text}}</td>
+                <td>{{line.username}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+                    
+    <a href="/home">Go back to home</a>
+                    
+    </body>
+                    
+                    
+</html>
+                    

@@ -6,6 +6,7 @@
 	<h1>Welcome {{username}}</h1>
 	<a href="/create_fb">Create Friend Group</a>
 	<a href="/manage_fb">Manage Owned Friend Groups</a>
+	<a href="/manage_tags">Manage Content Tags</a>
 </form>
 <form action="/post" method="POST">
 	<a href="/create_new_content">Create New Post</a>
@@ -23,6 +24,9 @@
 	<th>Time</th>
 	<th>Post</th>
 	<th>Username</th>
+	<th>Tag</th>
+	<th>Comment</th>
+	<th>More Info</th>
 
 {% for line in posts %}
 	<tr>
@@ -30,6 +34,15 @@
 		<td>{{line.timest}}</td>
 		<td><a href={{line.file_path}} target="_blank">{{line.content_name}}</a></td>
 		<td>{{line.username}}</td>
+		<form action="/tag_user_content" method="GET">
+		    <td><input type="submit" name={{line.id}} value = "Tag" /></td>
+		</form>
+		<form action="comment_on_post" method="GET">
+			<td><input type="submit" name={{line.id}} value = "Comment" /></td>
+		</form>
+		<form action="/more_info_post" method="GET">
+			<td><input type="submit" name={{line.id}} value = "More Info" /></td>
+		</form>
 	</tr>
 {% endfor %}
 </table>

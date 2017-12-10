@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <h1>Tag Users</h1>
+    </head>
+    <body>
+    <form action="/tag_user_content_AUTH" method="POST">
+        <input type="text" name = "username" placeholder="username" required/></br>
+        <input type="submit" value = Add />
+        {% if error %}
+            <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+                    
+    <a href="/home">Go back to home</a>
+                    
+    </body>
+                    
+                    
+    </html>
+                    

@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <h1>Content You're Tagged In</h1>
+    </head>
+    <body>
+
+    {% if not_true %}
+        <p>You are not tagged in any Content.</p>        
+    {% endif %}
+
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+            
+        <table>
+            {% for num in test %}
+                <th>Content ID</th>
+                <th>Accept</th>
+                <th>Decline</th>
+            {% endfor %}
+
+            {% for line in groups %}
+                <tr>
+                    <td>{{line.id}}</td>
+                    <form action="/manage_tags_AUTH" method="GET">
+                        <td><input type="submit" name="{{line.id}}_accept" value = Accept /></td>
+                        <td><input type="submit" name="{{line.id}}_decline" value = Decline /></td>
+                    </form>
+                </tr>
+            {% endfor %}
+        </table>
+                    
+    <a href="/home">Go back to home</a>
+                    
+    </body>
+                    
+                    
+</html>
+                    
