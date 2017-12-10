@@ -88,11 +88,6 @@ def registerAuth():
         return render_template('index.html')
 
 #Part 4 - Post Content
-@app.route('/post')
-def post():
-    return render_template('create_new_content.html')
-
-#Part 4 - Post Content
 @app.route('/create_new_content')
 def create_new_content():
     '''cursor = conn.cursor()
@@ -288,12 +283,12 @@ def more_info_post():
     for x in data1:
         if request.args.get(str(x['id']), None) == "More Info":
             content_id = str(x['id'])
-    query = "SELECT * FROM tag LEFT JOIN person ON tag.username_taggee=person.username WHERE status=1 and id=%s"
-    cursor.execute(query, (content_id))
+    query = "SELECT * FROM tag LEFT JOIN person ON tag.username_taggee=person.username WHERE status=1 and id=%s and (username_taggee in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s)) AND username_tagger in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s)))"
+    cursor.execute(query, (content_id, username, username, username, username))
     data2 = cursor.fetchall()
 
-    query2 = "SELECT * FROM comment WHERE id=%s"
-    cursor.execute(query2, (content_id))
+    query2 = "SELECT * FROM comment WHERE id=%s and username in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s))"
+    cursor.execute(query2, (content_id, username, username))
     data3 = cursor.fetchall()
     cursor.close()
     if(data2 and data3):
@@ -310,8 +305,8 @@ def more_info_post():
 def home():
     username = session['username']
     cursor = conn.cursor();
-    query = "SELECT * FROM content WHERE username = %s OR public='1' OR id IN (SELECT id FROM share WHERE group_name in (SELECT group_name FROM member WHERE username = %s)) ORDER BY timest DESC"
-    cursor.execute(query, (username, username))
+    query = "SELECT * FROM content WHERE (username in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s))) AND (username = %s OR public='1' OR id IN (SELECT id FROM share WHERE group_name in (SELECT group_name FROM member WHERE username = %s))) ORDER BY timest DESC"
+    cursor.execute(query, (username, username, username, username))
     data = cursor.fetchall()
     cursor.close()
     return render_template('home.html', username=username, posts=data)
@@ -484,7 +479,7 @@ def add_member_fb_2_AUTH():
 @app.route('/manage_fb')
 def manage_fb():
     username = session['username']
-    cursor = conn.cursor();
+    cursor = conn.cursor()
     query = "SELECT * FROM friendgroup WHERE username = %s"
     cursor.execute(query, (username))
     data = cursor.fetchall()
@@ -497,7 +492,42 @@ def manage_fb():
 
     #Part 7 - #1 - Add code here to allow for deleting a Friend Group
     #Next to 'Add Member'
-    
+
+#Part 7 - Messaging
+@app.route('/messages')
+def messages():
+    username = session['username']
+    cursor = conn.cursor()
+    query = "SELECT * FROM message WHERE sender = %s OR receiver = %s ORDER BY timest DESC"
+    cursor.execute(query, (username, username))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('messages.html',posts = data)
+
+@app.route('/messages_2')
+def messages_2():
+    return render_template('messages_2.html')
+
+@app.route('/messages_AUTH', methods=['GET', 'POST'])
+def messages_AUTH():
+    send = session['username']
+    receive = request.form['username']
+    message = request.form['message']
+    cursor = conn.cursor()
+
+    query1 = "SELECT username FROM person WHERE username=%s"
+    cursor.execute(query1, (receive))
+    data = cursor.fetchone()
+    if (data):
+        query = "INSERT INTO message VALUES(%s, %s, %s, %s)"
+        cursor.execute(query, (send, receive, message, datetime.now()))
+        conn.commit()
+        cursor.close()
+        return redirect(url_for('home'))
+    else:
+        error = "That user does not exist"
+        return render_template('messages_2.html', error=error)
+
 '''#Part 7 - #2 - Direct Messages (Between Two People Within Friend Groups)
 #Writing on Someone's Wall - Facebook
 @app.route('/direct_message_home')
@@ -511,23 +541,55 @@ def chat_with_selected_user():
 @app.route('chat_with_selected_user_AUTH')
 def chat_with_selected_user_AUTH():
     #Somehow implement refreshing page using python flask
-    #To simulate real time messaging
+    #To simulate real time messaging'''
 
 #Part 7 - #3 - Votes on Posted Content (Upvote/Downvote)
 #Add code to home to allow for this
 
 #Part 7 - #4 - 
-#????'''
+#????
 
 #Part 8 (Part 7 - #5) - Defriend
-@app.route('/defriend user')
+@app.route('/defriend_user')
 def defriend_user():
-    return render_template('defriend_user.html')
+    cursor = conn.cursor()
+    username = session['username']
+    query1 = "SELECT * FROM friendgroup WHERE username = %s"
+    cursor.execute(query1, (username))
+    data1 = cursor.fetchall()
+    group_name=''
+    for x in data1:
+        if request.args.get(str(x['group_name']), None) == "Defriend":
+            group_name = str(x['group_name'])
+            session['group_name'] = group_name
+    query2 = "SELECT * FROM member WHERE username_creator = %s and username != %s and group_name=%s"
+    cursor.execute(query2, (username, username, group_name))
+    data2=cursor.fetchall()
+    cursor.close()
+    if (data2):
+        return render_template('defriend_user.html', name=group_name, loop=[''], members=data2)
+    else:
+        error="There are no users in this Friend Group"
+        return render_template('defriend_user.html', name=group_name, error=error)
+
 
 @app.route('/defriend_user_AUTH')
 def defriend_user_AUTH():
-    #Mimic code from adding a friend to a Friend Group
-    #Except the logic will be backwards
+    cursor = conn.cursor()
+    username = session['username']
+    group_name = session['group_name']
+    query1 = "SELECT * FROM member WHERE username_creator = %s AND group_name=%s"
+    cursor.execute(query1, (username, group_name))
+    data1 = cursor.fetchall()
+    defriended=''
+    for x in data1:
+        if request.args.get(str(x['username'] + '_defriend'), None) == "Confirm":
+            defriended = str(x['username'])
+    print(defriended)
+    query2 = "DELETE FROM member WHERE username=%s"
+    cursor.execute(query2, (defriended))
+    conn.commit()
+    cursor.close()
     return redirect(url_for('home'))
 
 #Logout

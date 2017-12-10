@@ -17,13 +17,17 @@
         <table>
             {% for num in test %}
                 <th>Group Name</th>
-                <th>Options</th>
+                <th>Add Friend</th>
+                <th>Defriend</th>
             {% endfor %}
 
             {% for line in groups %}
                 <tr>
                     <td>{{line.group_name}}</td>
                     <td><a href='/add_member_fb'>Add Member</a></td>
+                    <form action='/defriend_user'>
+                        <td><input type="submit" name={{line.group_name}} value = "Defriend" /></td>
+                    </form>
                 </tr>
             {% endfor %}
         </table>

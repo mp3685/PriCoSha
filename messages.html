@@ -1,0 +1,32 @@
+<html>
+<head>
+    <h1> My Messages </h1>
+</head>
+<body>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+<a href="/messages_2">Send a message</a>
+
+<table>
+
+	<th>From</th>
+	<th>To</th>
+	<th>Message</th>
+	<th>time</th>
+
+{% for line in posts %}
+	<tr>
+		<td>{{line.sender}}</td>
+        <td>{{line.receiver}}</td>
+        <td>{{line.msg}}</td>
+        <td>{{line.timest}}</td>
+	</tr>
+{% endfor %}
+</table> 
+<a href="/home">Return Home</a>
+</body>
+</html>
