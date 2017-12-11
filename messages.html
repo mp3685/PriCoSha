@@ -16,14 +16,18 @@
 	<th>From</th>
 	<th>To</th>
 	<th>Message</th>
-	<th>time</th>
+	<th>Timestamp</th>
+	<th>Forward</th>
 
 {% for line in posts %}
 	<tr>
 		<td>{{line.sender}}</td>
         <td>{{line.receiver}}</td>
         <td>{{line.msg}}</td>
-        <td>{{line.timest}}</td>
+		<td>{{line.timest}}</td>
+		<form action='/forwarding' method="GET">
+				<td><input type="submit" name={{line.id}}_user value = "Forward" /></td>
+		</form>
 	</tr>
 {% endfor %}
 </table> 

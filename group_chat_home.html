@@ -1,0 +1,29 @@
+<html>
+        <head>
+            <h1> My Group Chats </h1>
+        </head>
+        <body>
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+                
+        <table>
+        
+            <th>Friend Group</th>
+            <th>Messages</th>
+        
+        {% for line in posts %}
+            <tr>
+                <td>{{line.group_name}}</td>
+                <form action='/group_chat' method="GET">
+                    <td><input type="submit" name="{{line.group_name}}" value = Continue /></td>
+                </form>
+            </tr>
+        {% endfor %}
+        </table> 
+        <a href="/home">Return Home</a>
+        </body>
+        </html>
+        

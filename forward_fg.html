@@ -1,0 +1,27 @@
+<html>
+        <head>
+            <h1>Share Content</h1>
+        </head>
+        <body>
+        <form action="/forwarding_fg_AUTH" method="POST">
+            <label>Check boxes for Friend Groups</label>
+            {% for line in fg %}
+                <input type = "checkbox"
+                name = {{line.group_name}}
+                value = "1" />
+                {{line.group_name}}</br>
+            {% endfor %}
+
+            <input type="submit" value = Submit />
+            {% if error %}
+                <p class="error"><strong>Error:</strong> {{error}}</p>
+            {% endif %}
+        </form>
+                        
+        <a href="/home">Go back to home</a>
+                        
+        </body>
+                        
+                        
+        </html>
+                        

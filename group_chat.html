@@ -1,0 +1,42 @@
+<html>
+        <head>
+            <h1> {{name}} </h1>
+            <h2>Group Chat</h2>
+        </head>
+        <body>
+        <style type="text/css">
+            table, th, td{
+                border: 1px solid black;
+            }
+        </style>
+
+        <table>
+        
+            <th>Timestamp</th>
+            <th>Messages</th>
+            <th>Forward</th>
+        
+        {% for line in text %}
+            <tr>
+                <td>{{line.timest}}</td>
+                <td>{{line.msg}}</td>
+                <!---<form action='/group_chat_AUTH' method="POST">
+                    <input type="text" name = "last_name" placeholder="last name" required/></br>
+                    -<td><input type="submit" name="{{line.group_name}}" value = Continue /></td>
+                </form>-->
+                <form action='/forwarding' method="GET">
+                        <td><input type="submit" name={{line.id}}_fg value = "Forward" /></td>
+                </form>
+            </tr>
+        {% endfor %}
+        </table>
+
+        <form action='/group_chat_AUTH' method="POST">
+            <input type="text" name = "message" placeholder="Message" required/></br>
+            <input type="submit" value = Send />
+        </form>
+
+        <a href="/group_chat_home">Go Back</a>
+        </body>
+        </html>
+        

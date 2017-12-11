@@ -14,6 +14,8 @@
 <a href="/create_new_content">Create New Post</a>
 <!--<input type="submit" value = Create New Content />-->
 
+<a href="/group_chat_home">Group Chats</a>
+
 <style type="text/css">
 	table, th, td{
 		border: 1px solid black;
@@ -28,6 +30,9 @@
 	<th>Tag</th>
 	<th>Comment</th>
 	<th>More Info</th>
+	<th>Upvote</th>
+	<th>Downvote</th>
+	<th>Pts</th>
 
 {% for line in posts %}
 	<tr>
@@ -44,6 +49,13 @@
 		<form action="/more_info_post" method="GET">
 			<td><input type="submit" name={{line.id}} value = "More Info" /></td>
 		</form>
+	<form action="/vote" method="GET">
+		<td><input type="submit" name={{line.id}} value = "Upvote" /></td>
+	</form>
+	<form action="/vote" method="GET">
+		<td><input type="submit" name={{line.id}} value = "Downvote" /></td>
+	</form>
+	<td>{{line.pts}}</td>
 	</tr>
 {% endfor %}
 </table>

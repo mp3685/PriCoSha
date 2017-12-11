@@ -107,13 +107,22 @@ def create_new_content_AUTH():
     public = request.form['public']
 
     session['content_name'] = content_name
-    
+    time = datetime.now()
     query = 'INSERT INTO content (username, timest, file_path, content_name, public) VALUES (%s, %s, %s, %s, %s)'
-    cursor.execute(query, (username, datetime.now(), file_path, content_name, public))
+    cursor.execute(query, (username, time, file_path, content_name, public))
     conn.commit()
-    cursor.close()
+
+    
+    query2 = "SELECT * FROM content WHERE username=%s ORDER BY timest DESC"
+    cursor.execute(query2, (username))
+    data2 = cursor.fetchone()
+    print(data2)
+    query1 = "INSERT INTO votes VALUES(%s, %s)"
+    cursor.execute(query1, (data2['id'], 0))
+    conn.commit()
     
     cursor.close()
+
     if (int(public)==0):
         username = session['username']
         cursor = conn.cursor();
@@ -126,11 +135,6 @@ def create_new_content_AUTH():
     else:
         return redirect(url_for('home'))
 
-#Part 4 - Share
-@app.route('/share_content')
-def share_content():
-    return render_template('share_content.html')
-
 #Part 4 - Share AUTH
 @app.route('/share_content_AUTH', methods=['GET', 'POST'])
 def share_content_AUTH():
@@ -139,8 +143,6 @@ def share_content_AUTH():
     query = "SELECT group_name FROM friendgroup WHERE username = %s"
     cursor.execute(query, (username))
     data = cursor.fetchall()
-    cursor.close()
-    cursor = conn.cursor()
 
     query1 = 'SELECT id FROM content WHERE username = %s AND content_name = %s'
     cursor.execute(query1, (username, session['content_name']))
@@ -305,7 +307,7 @@ def more_info_post():
 def home():
     username = session['username']
     cursor = conn.cursor();
-    query = "SELECT * FROM content WHERE (username in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s))) AND (username = %s OR public='1' OR id IN (SELECT id FROM share WHERE group_name in (SELECT group_name FROM member WHERE username = %s))) ORDER BY timest DESC"
+    query = "SELECT * FROM content LEFT JOIN votes ON content.id=votes.id WHERE (username in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s))) AND (username = %s OR public='1' OR content.id IN (SELECT id FROM share WHERE group_name in (SELECT group_name FROM member WHERE username = %s))) ORDER BY timest DESC"
     cursor.execute(query, (username, username, username, username))
     data = cursor.fetchall()
     cursor.close()
@@ -475,7 +477,7 @@ def add_member_fb_2_AUTH():
         error = "You do not own a FriendGroup with that name"
         return render_template('add_member_fb.html', error=error)
 
-#Part 7 - #1 - Manage Friend Groups (Delete)
+#Manage Friend Groups
 @app.route('/manage_fb')
 def manage_fb():
     username = session['username']
@@ -490,10 +492,7 @@ def manage_fb():
     else:
         return render_template('manage_fb.html', groups=data, not_true=True)
 
-    #Part 7 - #1 - Add code here to allow for deleting a Friend Group
-    #Next to 'Add Member'
-
-#Part 7 - Messaging
+#Part 7 - #1 - Messaging
 @app.route('/messages')
 def messages():
     username = session['username']
@@ -519,7 +518,7 @@ def messages_AUTH():
     cursor.execute(query1, (receive))
     data = cursor.fetchone()
     if (data):
-        query = "INSERT INTO message VALUES(%s, %s, %s, %s)"
+        query = "INSERT INTO message(sender, receiver, msg, timest) VALUES(%s, %s, %s, %s)"
         cursor.execute(query, (send, receive, message, datetime.now()))
         conn.commit()
         cursor.close()
@@ -528,26 +527,157 @@ def messages_AUTH():
         error = "That user does not exist"
         return render_template('messages_2.html', error=error)
 
-'''#Part 7 - #2 - Direct Messages (Between Two People Within Friend Groups)
-#Writing on Someone's Wall - Facebook
-@app.route('/direct_message_home')
-def direct_message_home():
-    return render_template('direct_message_home.html')
+@app.route('/forwarding')
+def forwarding():
+    cursor = conn.cursor()
+    username = session['username']
+    query1 = "SELECT * FROM message"
+    cursor.execute(query1)
+    data1 = cursor.fetchall()
+    message=''
+    for x in data1:
+        if request.args.get(str(x['id'])+'_user', None) == "Forward":
+            message = str(x['msg'])
+    query2 = "SELECT * FROM group_chat"
+    cursor.execute(query2)
+    data2 = cursor.fetchall()
+    for x in data2:
+        if request.args.get(str(x['id'])+'_fg', None) == "Forward":
+            message = str(x['msg'])
+    cursor.close()
+    session['forward_msg'] = message
+    return render_template('forward.html')
 
-@app.route('/chat_with_selected_user')
-def chat_with_selected_user():
-    return render_template('chat_with_selected_user.html')
+@app.route('/forwarding_user', methods=['GET', 'POST'])
+def forwarding_user():
+    return render_template('forward_user.html')
 
-@app.route('chat_with_selected_user_AUTH')
-def chat_with_selected_user_AUTH():
-    #Somehow implement refreshing page using python flask
-    #To simulate real time messaging'''
+@app.route('/forwarding_user_AUTH', methods=['GET', 'POST'])
+def forwarding_user_AUTH():
+    username = session['username']
+    message = session['forward_msg']
+    cursor = conn.cursor()
+    user = request.form['username']
+    query = "SELECT * FROM person WHERE username=%s"
+    cursor.execute(query, (user))
+    data = cursor.fetchone()
+    if (data):
+        query1 = "INSERT INTO message(sender, receiver, msg, timest) VALUES(%s, %s, %s, %s)"
+        cursor.execute(query1, (username, user, message, datetime.now()))
+        conn.commit()
+        cursor.close()
+        return redirect(url_for('home'))
+    else:
+        cursor.close()
+        error="That user does not exist."
+        return render_template('forward_user.html', error=error)
 
-#Part 7 - #3 - Votes on Posted Content (Upvote/Downvote)
-#Add code to home to allow for this
+@app.route('/forwarding_fg', methods=['GET', 'POST'])
+def forwarding_fg():
+    username = session['username']
+    cursor = conn.cursor();
+    query = "SELECT * FROM friendgroup WHERE username = %s"
+    cursor.execute(query, (username))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('forward_fg.html', fg=data)
 
-#Part 7 - #4 - 
-#????
+@app.route('/forwarding_fg_AUTH', methods=['GET', 'POST'])
+def forwarding_fg_AUTH():
+    username = session['username']
+    message = session['forward_msg']
+    cursor = conn.cursor()
+    query = "SELECT * FROM friendgroup WHERE username = %s"
+    cursor.execute(query, (username))
+    data = cursor.fetchall()
+    
+    cursor.close()
+    for row in data:
+        if (request.form.get(row['group_name'])):
+            cursor = conn.cursor()
+            query = "INSERT INTO group_chat(username, group_name, username_creator, msg, timest) VALUES (%s, %s, %s, %s, %s)"
+            query2 = "SELECT * FROM member WHERE username=%s AND group_name=%s"
+            cursor.execute(query2, (username, row['group_name']))
+            data2 = cursor.fetchone()
+            cursor.execute(query, (username, row['group_name'], data2['username_creator'], message, datetime.now()))
+            conn.commit()
+            cursor.close()
+    return redirect(url_for('home'))
+
+@app.route('/vote', methods=['GET', 'POST'])
+def vote():
+    username = session['username']
+    cursor = conn.cursor()
+    query = "SELECT * FROM content NATURAL JOIN votes WHERE (username in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s))) AND (username = %s OR public='1' OR id IN (SELECT id FROM share WHERE group_name in (SELECT group_name FROM member WHERE username = %s))) ORDER BY timest DESC"
+    cursor.execute(query, (username, username, username, username))
+    data = cursor.fetchall()
+    vote = ''
+    for x in data:
+        if request.args.get(str(x['id']), None) == "Upvote":
+            vote = str(x['id'])
+            query = "UPDATE votes SET pts = pts + 1 WHERE id=%s"
+            cursor.execute(query, (vote))
+            conn.commit()
+        elif request.args.get(str(x['id']), None) == "Downvote":
+            vote = str(x['id'])
+            query = "UPDATE votes SET pts = pts - 1 WHERE id=%s"
+            cursor.execute(query, (vote))
+            conn.commit()
+    query = "SELECT * FROM content LEFT JOIN votes ON content.id=votes.id WHERE (username in (SELECT username FROM member where group_name in (select group_name from member where username = %s) and username_creator in (select username_creator from member where username=%s))) AND (username = %s OR public='1' OR content.id IN (SELECT id FROM share WHERE group_name in (SELECT group_name FROM member WHERE username = %s))) ORDER BY timest DESC"
+    cursor.execute(query, (username, username, username, username))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('home.html', username=username, posts=data)
+
+@app.route('/group_chat_home')
+def member_of_friend_groups():
+    username = session['username']
+    cursor = conn.cursor()
+    query = "SELECT * FROM member WHERE username=%s"
+    cursor.execute(query, (username))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('group_chat_home.html', posts=data)
+
+@app.route('/group_chat', methods=['GET', 'POST'])
+def group_chat():
+    cursor = conn.cursor()
+    username = session['username']
+    query1 = "SELECT * FROM member WHERE username = %s"
+    cursor.execute(query1, (username))
+    data1 = cursor.fetchall()
+    group_name=''
+    for x in data1:
+        if request.args.get(str(x['group_name']), None) == "Continue":
+            group_name = str(x['group_name'])
+            session['group_name'] = group_name
+    query2 = "SELECT username_creator FROM member WHERE username = %s AND group_name=%s"
+    print("HERE:", username, group_name)
+    cursor.execute(query2, (username, group_name))
+    data2 = cursor.fetchone()
+    print(data2)
+    session['friend_group_creator'] = data2['username_creator']
+    query3 = "SELECT * FROM group_chat WHERE username = %s AND group_name=%s AND username_creator=%s ORDER BY timest DESC"
+    cursor.execute(query3, (username, group_name, session['friend_group_creator']))
+    data3 = cursor.fetchall()
+    cursor.close()
+    return render_template('group_chat.html', name=session['group_name'], text=data3)
+
+@app.route('/group_chat_AUTH', methods=['GET', 'POST'])
+def group_chat_AUTH():
+    username = session['username']
+    group_name = session['group_name']
+    username_creator = session['friend_group_creator']
+    message = request.form['message']
+    cursor = conn.cursor()
+    query = "INSERT INTO group_chat (username, group_name, username_creator, msg, timest) VALUES(%s, %s, %s, %s, %s)"
+    cursor.execute(query, (username, group_name, username_creator, message, datetime.now()))
+    conn.commit()
+    query3 = "SELECT * FROM group_chat WHERE username = %s AND group_name=%s AND username_creator=%s ORDER BY timest DESC"
+    cursor.execute(query3, (username, group_name, session['friend_group_creator']))
+    data3 = cursor.fetchall()
+    cursor.close()
+    return render_template('group_chat.html', name=session['group_name'], text=data3)
 
 #Part 8 (Part 7 - #5) - Defriend
 @app.route('/defriend_user')
